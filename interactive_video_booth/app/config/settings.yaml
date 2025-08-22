@@ -1,0 +1,28 @@
+capture:
+  width: 1280
+  height: 720
+  fps: 30
+
+detection:
+  sensitivity: 0.6
+  mode: mog2
+
+effect:
+  type: aura
+  intensity: 0.85
+  hue_shift: 0.0
+  trail: 0.5
+
+recording:
+  duration_s: 12
+  codec: mp4v
+
+network:
+  host: 0.0.0.0
+  ws_port: 8765
+
+postprocess:
+  template_id: default
+  event_name: Booth Event
+  description: ""
+  overlay_path: assets/overlay.png
