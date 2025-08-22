@@ -7,18 +7,23 @@ import numpy as np
 
 
 class Camera:
-    def __init__(self, source: Union[int, str] = 0, width: int = 1280, height: int = 720, fps: int = 30):
+    def __init__(self, source: Union[int, str] = 0, width: int = 1280, height: int = 720, fps: int = 30, api_backend: Optional[int] = None):
         self.source = source
         self.width = width
         self.height = height
         self.fps = fps
+        self.api_backend = api_backend
         self.cap: Optional[cv2.VideoCapture] = None
         self.thread: Optional[threading.Thread] = None
         self.running = False
         self.latest_frame: Optional[np.ndarray] = None
 
     def start(self):
-        self.cap = cv2.VideoCapture(self.source)
+        # Open with specific backend if provided
+        if self.api_backend is None:
+            self.cap = cv2.VideoCapture(self.source)
+        else:
+            self.cap = cv2.VideoCapture(self.source, self.api_backend)
         # Apply properties if possible
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)

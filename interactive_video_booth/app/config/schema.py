@@ -46,6 +46,8 @@ class SharedState:
     def __post_init__(self):
         self.params = {
             # Flattened runtime params for easy slider mapping
+            "capture.source": 0,
+            "capture.backend": None,
             "detection.sensitivity": self.config.get("detection", {}).get("sensitivity", 0.5),
             "detection.mode": self.config.get("detection", {}).get("mode", "mog2"),
             "effect.type": self.config.get("effect", {}).get("type", "aura"),

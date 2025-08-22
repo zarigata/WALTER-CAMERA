@@ -15,6 +15,7 @@ from app.processor.pipeline import ProcessingPipeline
 from app.display.display import Display
 from app.recorder.recorder import Recorder
 from app.remote_api.websocket_server import run_websocket_server
+from app.manager.manager import run_manager_gui
 
 
 def ensure_dirs():
@@ -35,7 +36,9 @@ def main():
 
     # Camera
     cam_source = 0 if args.source == "0" else args.source
-    camera = Camera(cam_source, width=cfg.get("capture", {}).get("width", 1280), height=cfg.get("capture", {}).get("height", 720), fps=cfg.get("capture", {}).get("fps", 30))
+    shared.set_param("capture.source", cam_source if not isinstance(cam_source, str) else cam_source)
+    shared.set_param("capture.backend", None)
+    camera = Camera(cam_source, width=cfg.get("capture", {}).get("width", 1280), height=cfg.get("capture", {}).get("height", 720), fps=cfg.get("capture", {}).get("fps", 30), api_backend=None)
     camera.start()
 
     # Processing pipeline
@@ -51,11 +54,38 @@ def main():
     ws_thread = threading.Thread(target=run_websocket_server, args=(shared,), daemon=True)
     ws_thread.start()
 
+    # Manager GUI (camera selector) in background
+    mgr_thread = threading.Thread(target=run_manager_gui, args=(shared,), daemon=True)
+    mgr_thread.start()
+
     print("App started. Press R to record, Q to quit.")
 
     try:
         prev_time = time.time()
+        # Track last selected source/backend to hot-swap
+        last_src = shared.get_param("capture.source")
+        last_backend = shared.get_param("capture.backend")
         while True:
+            # Hot-swap camera if selection changed
+            cur_src = shared.get_param("capture.source")
+            cur_backend = shared.get_param("capture.backend")
+            if cur_src != last_src or cur_backend != last_backend:
+                try:
+                    print(f"Switching camera to source={cur_src}, backend={cur_backend}")
+                    camera.stop()
+                    # Determine numeric vs string source
+                    src = cur_src
+                    # Recreate and start camera
+                    camera = Camera(src,
+                                    width=cfg.get("capture", {}).get("width", 1280),
+                                    height=cfg.get("capture", {}).get("height", 720),
+                                    fps=cfg.get("capture", {}).get("fps", 30),
+                                    api_backend=cur_backend if isinstance(cur_backend, int) else None)
+                    camera.start()
+                except Exception as e:
+                    print("Camera switch error:", e)
+                finally:
+                    last_src, last_backend = cur_src, cur_backend
             frame = camera.read()
             if frame is None:
                 # Sleep briefly to avoid busy spin
