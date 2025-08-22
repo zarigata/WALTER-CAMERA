@@ -57,12 +57,12 @@ class PipelineManager:
             if self.recording and self.recorder is not None:
                 self.recorder.write(cv2.resize(frame, (self.cfg.app.output_width, self.cfg.app.output_height)))
 
-    def countdown_and_record(self, duration_s: int | None = None) -> dict:
+    def countdown_and_record(self, duration_s: int | None = None, job_id: str | None = None) -> dict:
         dur = int(duration_s or self.cfg.app.record_duration_s)
         with self.record_lock:
             if self.recording:
                 return {"status": "busy"}
-            self.job_id = uuid.uuid4().hex[:8]
+            self.job_id = job_id or uuid.uuid4().hex[:8]
             self.recording = True
         # Countdown overlay
         for t in [3, 2, 1]:

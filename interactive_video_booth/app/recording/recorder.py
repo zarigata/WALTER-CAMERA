@@ -70,11 +70,13 @@ class Recorder:
         ts = os.path.basename(final_video_path).split('_')[0]
         base_no_suffix = os.path.basename(final_video_path).replace('_record.mp4', '')
         thumb_path = os.path.join(self.out_dir, f"{base_no_suffix}_thumb.jpg")
+        thumb_tmp = thumb_path + '.tmp'
         meta_path = os.path.join(self.out_dir, f"{base_no_suffix}.json")
 
         # Thumbnail from mid-frame approximation
         mid = cv2.resize(last_frame_bgr, (300, 169))
-        Image.fromarray(cv2.cvtColor(mid, cv2.COLOR_BGR2RGB)).save(thumb_path, quality=90)
+        Image.fromarray(cv2.cvtColor(mid, cv2.COLOR_BGR2RGB)).save(thumb_tmp, quality=90)
+        os.replace(thumb_tmp, thumb_path)
 
         meta = {
             "filename": os.path.basename(final_video_path),

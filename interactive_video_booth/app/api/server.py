@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import threading
+import uuid
 
 from ..config import load_config
 from ..pipeline import PipelineManager
@@ -31,13 +32,20 @@ async def health():
 @app.post("/capture")
 async def capture(body: dict):
     duration = int(body.get("duration", _cfg.app.record_duration_s))
+    job_id = uuid.uuid4().hex[:8]
+    # Optional: filter selection
+    filter_id = body.get("filter_id")
+    if filter_id:
+        _pipeline.filter_used = str(filter_id)
+    # Pre-mark job as started
+    _jobs[job_id] = {"status": "started", "job_id": job_id}
     # Fire countdown + record in a thread so API returns quickly
     def run():
-        res = _pipeline.countdown_and_record(duration_s=duration)
-        _jobs[res.get("job_id")] = res
+        res = _pipeline.countdown_and_record(duration_s=duration, job_id=job_id)
+        _jobs[job_id] = res
     t = threading.Thread(target=run, daemon=True)
     t.start()
-    return {"status": "started"}
+    return {"status": "started", "job_id": job_id}
 
 
 @app.get("/status/{job_id}")
