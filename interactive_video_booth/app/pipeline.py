@@ -32,6 +32,9 @@ class PipelineManager:
         self.job_id: Optional[str] = None
         self.person_count = 0
         self.filter_used = cfg.render.effect
+        # GUI integration
+        self.gui_mode = False
+        self._frame_cb = None  # type: Optional[callable]
         self.thread = threading.Thread(target=self._loop, daemon=True)
         self.thread.start()
 
@@ -47,11 +50,18 @@ class PipelineManager:
             tracked = self.tracker.update(fused)
             self.person_count = 1 if np.count_nonzero(tracked) > 0 else 0
 
-            # Render
-            self.renderer.render(frame, tracked)
-            key = cv2.waitKey(1) & 0xFF
-            if key == 27:  # ESC to exit display only
-                break
+            # Render or push to GUI
+            if self.gui_mode and self._frame_cb:
+                composed = self.renderer.compose_frame(frame, tracked)
+                try:
+                    self._frame_cb(composed)
+                except Exception:
+                    pass
+            else:
+                self.renderer.render(frame, tracked)
+                key = cv2.waitKey(1) & 0xFF
+                if key == 27:  # ESC to exit display only
+                    break
 
             # Recording
             if self.recording and self.recorder is not None:
@@ -70,10 +80,16 @@ class PipelineManager:
             if frame is None:
                 time.sleep(0.1)
                 continue
-            overlay = frame.copy()
+            overlay = cv2.resize(frame.copy(), (self.cfg.app.output_width, self.cfg.app.output_height))
             cv2.putText(overlay, str(t), (int(0.45 * overlay.shape[1]), int(0.55 * overlay.shape[0])), cv2.FONT_HERSHEY_SIMPLEX, 6, (0, 0, 255), 12, cv2.LINE_AA)
-            cv2.imshow(self.cfg.render.window_name, overlay)
-            cv2.waitKey(1)
+            if self.gui_mode and self._frame_cb:
+                try:
+                    self._frame_cb(overlay)
+                except Exception:
+                    pass
+            else:
+                cv2.imshow(self.cfg.render.window_name, overlay)
+                cv2.waitKey(1)
             time.sleep(1.0)
 
         # Start recorder
@@ -111,3 +127,8 @@ class PipelineManager:
     def stop(self):
         self.cam.stop()
         self.renderer.close()
+
+    # GUI bridge
+    def set_frame_callback(self, cb):
+        self._frame_cb = cb
+        self.gui_mode = cb is not None

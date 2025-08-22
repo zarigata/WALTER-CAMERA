@@ -16,13 +16,51 @@ class CameraStream:
         self.stopped = True
         self.cap: Optional[cv2.VideoCapture] = None
 
-    def _open(self):
-        self.cap = cv2.VideoCapture(self.source)
-        if self.width and self.height:
-            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
-            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
-        if self.fps:
-            self.cap.set(cv2.CAP_PROP_FPS, self.fps)
+    def _open(self, timeout_s: float = 3.0):
+        backends = []
+        # Try platform-specific preferred backends
+        backends.extend([cv2.CAP_MSMF, cv2.CAP_DSHOW])
+        # Fallback to default (0) by using constructor without apiPreference
+
+        tried = []
+        for api in backends + [None]:
+            try:
+                cap = cv2.VideoCapture(self.source) if api is None else cv2.VideoCapture(self.source, api)
+                start = time.time()
+                # Apply common properties
+                if self.width and self.height:
+                    cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
+                    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
+                if self.fps:
+                    cap.set(cv2.CAP_PROP_FPS, self.fps)
+                # Some drivers expose buffersize
+                cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
+                # Wait until opened and first frame available or timeout
+                ok_open = cap.isOpened()
+                ok_read = False
+                while time.time() - start < timeout_s:
+                    if not ok_open:
+                        time.sleep(0.05)
+                        ok_open = cap.isOpened()
+                        continue
+                    ok_read, _ = cap.read()
+                    if ok_read:
+                        break
+                    time.sleep(0.05)
+                if ok_open and ok_read:
+                    self.cap = cap
+                    return
+                cap.release()
+                tried.append(api)
+            except Exception:
+                tried.append(api)
+                try:
+                    cap.release()
+                except Exception:
+                    pass
+                continue
+        # If all attempts failed, leave cap as None and let loop retry
+        self.cap = None
 
     def start(self):
         self._open()

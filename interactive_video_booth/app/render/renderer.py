@@ -10,8 +10,9 @@ class Renderer:
         self.fullscreen = fullscreen
         self.window_name = window_name
         self.effect = effect
-        cv2.namedWindow(self.window_name, cv2.WND_PROP_FULLSCREEN)
+        # Window setup only if using OpenCV display mode
         if self.fullscreen:
+            cv2.namedWindow(self.window_name, cv2.WND_PROP_FULLSCREEN)
             cv2.setWindowProperty(self.window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
     def _apply_effect(self, frame: np.ndarray, mask: np.ndarray) -> np.ndarray:
@@ -34,11 +35,19 @@ class Renderer:
         cv2.drawContours(overlay, contours, -1, (255, 255, 255), thickness=2)
         return overlay
 
-    def render(self, frame_bgr: np.ndarray, mask: np.ndarray):
+    def compose_frame(self, frame_bgr: np.ndarray, mask: np.ndarray) -> np.ndarray:
         frame_resized = cv2.resize(frame_bgr, (self.w, self.h))
         mask_resized = cv2.resize(mask, (self.w, self.h), interpolation=cv2.INTER_NEAREST)
         out = self._apply_effect(frame_resized, mask_resized)
-        cv2.imshow(self.window_name, out)
+        return out
+
+    def render(self, frame_bgr: np.ndarray, mask: np.ndarray):
+        out = self.compose_frame(frame_bgr, mask)
+        # Only display if OpenCV window was created
+        try:
+            cv2.imshow(self.window_name, out)
+        except Exception:
+            pass
 
     def close(self):
         try:
