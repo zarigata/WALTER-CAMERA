@@ -31,10 +31,14 @@ class CameraStream:
                 if self.width and self.height:
                     cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
                     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
-                if self.fps:
+                # IMPORTANT: Avoid CAP_PROP_FPS on many Windows webcam drivers (can hang)
+                if self.fps and isinstance(self.source, str):
                     cap.set(cv2.CAP_PROP_FPS, self.fps)
-                # Some drivers expose buffersize
-                cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
+                # Some drivers expose buffersize (ignore errors)
+                try:
+                    cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
+                except Exception:
+                    pass
                 # Wait until opened and first frame available or timeout
                 ok_open = cap.isOpened()
                 ok_read = False
