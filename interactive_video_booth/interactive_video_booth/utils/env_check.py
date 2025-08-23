@@ -22,8 +22,9 @@ OPTIONAL_IMPORTS: List[str] = [
 
 
 def _check_python_version() -> None:
-    if sys.version_info < (3, 9):
-        raise StageError(2, "Python>=3.9 required")
+    # Enforce Python 3.11.x for compatibility
+    if not (sys.version_info.major == 3 and sys.version_info.minor == 11):
+        raise StageError(2, f"Python 3.11.x required; detected {sys.version_info.major}.{sys.version_info.minor}")
 
 
 def _check_packages() -> List[str]:

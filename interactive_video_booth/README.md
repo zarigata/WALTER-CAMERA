@@ -5,8 +5,9 @@ This repository contains a staged, self-testing prototype for a real-time camera
 Implemented now:
 - Stage 0 — Environment & prerequisites check
 - Stage 1 — Camera discovery & validation
+- Stage 2 — Model loading & single-frame inference (offline, ONNX Runtime with OpenCV DNN fallback)
 
-Next iterations will add Stages 2–6 (models, pipeline, GUI, robustness, deployment).
+Next iterations will add Stages 3–6 (pipeline, GUI, robustness, deployment).
 
 ## Requirements
 - Python 3.9+ (uses system-installed Python; recommended 3.11 on Windows)
@@ -103,6 +104,38 @@ References:
 
 - ONNX Runtime OpenVINO EP: https://onnxruntime.ai/docs/execution-providers/OpenVINO-ExecutionProvider.html
 - Ultralytics + OpenVINO integration: https://docs.ultralytics.com/integrations/openvino/
+
+## Offline-first workflow
+
+The system is designed to run entirely offline after a one-time online preparation step.
+
+- **Step 1 (online, one-time):** prepare and validate models
+  - PowerShell/CMD:
+    ```cmd
+    scripts\prepare_models.bat
+    ```
+  - Bash:
+    ```bash
+    ./scripts/prepare_models.sh
+    ```
+  - Or directly:
+    ```bash
+    python -m interactive_video_booth.main --prepare-models
+    ```
+
+  This downloads required assets into `models/` using an optional manifest `configs/models_manifest.json`.
+  If the manifest is missing, a default entry for `yolov8n.onnx` is used.
+
+- **Step 2 (offline, repeatable):** run stages normally
+  - Examples:
+    ```cmd
+    python -m interactive_video_booth.main --auto --inference cpu --force
+    python -m interactive_video_booth.main --stage 2 --inference auto --force
+    ```
+
+Notes:
+- Stage 2 never downloads at runtime. It validates presence of required models locally; if missing, it fails fast unless `--force` is used (in which case it proceeds with diagnostics and saves outputs without inference).
+- A default manifest is embedded; you may provide your own at `configs/models_manifest.json` to pin versions and hashes.
 
 ## Stage 1 — Camera discovery & validation
 - Tries sources in order:

@@ -9,11 +9,14 @@ from .capture.camera_discovery import discover_and_validate_camera
 from .utils.logger import get_logger
 from .inference.providers import select_onnx_providers
 import json
+from .inference.stage2 import run_stage2
+from .utils.assets import prepare_models
+from .utils.env_snapshot import create_env_snapshot
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Interactive Video Booth staged runner")
-    p.add_argument("--stage", type=int, default=None, help="Run a single stage (0 or 1 currently implemented)")
+    p.add_argument("--stage", type=int, default=None, help="Run a single stage (0-2 implemented)")
     p.add_argument("--force", action="store_true", help="Force continue on flaky camera in Stage 1")
     p.add_argument("--device", type=str, default=None, help="Explicit camera source (e.g., 0, 1, rtsp://..., /dev/video0)")
     p.add_argument(
@@ -24,6 +27,16 @@ def parse_args() -> argparse.Namespace:
         help="Select inference mode for later stages (auto chooses GPU if available)",
     )
     p.add_argument("--auto", action="store_true", help="Run stages sequentially from 0 upward (stops on failure)")
+    p.add_argument(
+        "--prepare-models",
+        action="store_true",
+        help="Download and validate required models (online) and exit. Use before offline runs.",
+    )
+    p.add_argument(
+        "--snapshot-env",
+        action="store_true",
+        help="Write environment snapshot and requirements.lock.txt, then exit.",
+    )
     return p.parse_args()
 
 
@@ -59,6 +72,20 @@ def main() -> int:
     base_dir = Path(__file__).resolve().parents[1]
 
     try:
+        # One-time online preparation for offline runs
+        if args.prepare_models:
+            paths = prepare_models(base_dir, allow_download=True)
+            print("[PREPARE] Models ready:")
+            for k, v in paths.items():
+                print(f" - {k}: {v}")
+            return 0
+
+        # Environment snapshot
+        if args.snapshot_env:
+            snap = create_env_snapshot(base_dir)
+            print("[SNAPSHOT] Environment snapshot written to configs/env_snapshot.json and requirements.lock.txt")
+            return 0
+
         if args.auto:
             # Stage 0
             print("[STAGE 0] Running...")
@@ -67,6 +94,10 @@ def main() -> int:
             # Stage 1
             print("[STAGE 1] Running...")
             run_stage1(base_dir, force=args.force, device=args.device)
+            # Stage 2
+            print("[STAGE 2] Running...")
+            prefer_gpu = args.inference in ("auto", "gpu")
+            run_stage2(base_dir, prefer_gpu=prefer_gpu, force=args.force)
             print("Auto run complete. Further stages TBD.")
             return 0
 
@@ -80,8 +111,11 @@ def main() -> int:
             return code
         elif args.stage == 1:
             return run_stage1(base_dir, force=args.force, device=args.device)
+        elif args.stage == 2:
+            prefer_gpu = args.inference in ("auto", "gpu")
+            return run_stage2(base_dir, prefer_gpu=prefer_gpu, force=args.force)
         else:
-            print("Only Stage 0 and 1 are implemented in this prototype.")
+            print("Stages 0–2 are implemented in this prototype.")
             return 0
     except StageError as se:
         # Ensure exit code
