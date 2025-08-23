@@ -6,10 +6,12 @@ requests>=2.31.0
 
 # Inference (prefer ONNX Runtime; PyTorch optional)
 onnxruntime>=1.16.0
-# Optional GPU acceleration
-onnxruntime-gpu>=1.16.0; platform_system=="Windows"
-# Optional PyTorch fallback (CPU-only)
-torch>=2.1.0; platform_system=="Windows"
+
+# Optional GPU/accelerators (install manually if needed to avoid package conflicts):
+# - CUDA GPU: pip install onnxruntime-gpu==<matching version>
+# - Windows GPU via DirectML: pip install onnxruntime-directml==<matching version>
+# - Intel OpenVINO EP: install OpenVINO toolkit and initialize env (see README)
+# - PyTorch (CPU/GPU): pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 # GUI
 PyQt6>=6.5.0
