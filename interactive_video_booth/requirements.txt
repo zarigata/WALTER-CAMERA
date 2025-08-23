@@ -1,7 +1,0 @@
-opencv-python
-numpy
-websockets
-Flask
-PyYAML
-Pillow
-pytest
