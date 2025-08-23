@@ -1,0 +1,4 @@
+{
+  "preferred": ["usb:0", "usb:1", "rtsp://192.168.1.100:8554/live"],
+  "fallbacks": ["usb:2", "/dev/video0"]
+}

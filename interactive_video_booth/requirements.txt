@@ -1,0 +1,22 @@
+# Core
+opencv-python>=4.8.0
+numpy>=1.23.0
+psutil>=5.9.0
+requests>=2.31.0
+
+# Inference (prefer ONNX Runtime; PyTorch optional)
+onnxruntime>=1.16.0
+# Optional GPU acceleration
+onnxruntime-gpu>=1.16.0; platform_system=="Windows"
+# Optional PyTorch fallback (CPU-only)
+torch>=2.1.0; platform_system=="Windows"
+
+# GUI
+PyQt6>=6.5.0
+
+# Video writing
+imageio>=2.31.0
+imageio-ffmpeg>=0.4.9
+
+# Testing
+pytest>=7.4.0
