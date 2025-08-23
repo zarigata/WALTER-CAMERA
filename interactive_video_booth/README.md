@@ -70,6 +70,40 @@ Example console output:
 ```
 If GPU absent, you will see: `WARNING: GPU not available. Proceeding in CPU-only mode; expect lower FPS.`
 
+## CPU/GPU modes
+
+You can pick the inference path without changing code:
+
+- `--inference auto` (default): tries CUDA > DirectML > OpenVINO > CPU.
+- `--inference gpu`: forces a GPU-first choice (CUDA or DirectML, then OpenVINO, then CPU).
+- `--inference cpu`: prefers CPU-only; if OpenVINO EP is present it will be used, else plain CPU EP.
+
+Quick launch scripts:
+
+- Windows (CMD/PowerShell):
+  ```cmd
+  scripts\run_cpu.bat
+  scripts\run_gpu.bat
+  ```
+- Bash:
+  ```bash
+  ./scripts/run_cpu.sh
+  ./scripts/run_gpu.sh
+  ```
+
+Selected backend is written to `configs/runtime_backend.json`.
+
+Notes:
+
+- CUDA requires `onnxruntime-gpu` and NVIDIA drivers/CUDA runtime.
+- DirectML (Windows, non-NVIDIA GPUs) requires `onnxruntime-directml`.
+- OpenVINO EP (often fastest on Intel CPUs) requires installing Intel OpenVINO and initializing its env.
+
+References:
+
+- ONNX Runtime OpenVINO EP: https://onnxruntime.ai/docs/execution-providers/OpenVINO-ExecutionProvider.html
+- Ultralytics + OpenVINO integration: https://docs.ultralytics.com/integrations/openvino/
+
 ## Stage 1 — Camera discovery & validation
 - Tries sources in order:
   - USB indices `0..4` (plus `--device` if supplied)
