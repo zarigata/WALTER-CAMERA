@@ -1,12 +1,9 @@
-"""
-Walter Camera - Multi-purpose Python Application
-Handles web servers, file monitoring, macros, and OBS integration
-"""
-
 import os
 import threading
 import time
-from flask import Flask, render_template_string, send_from_directory, request, jsonify
+import json
+from datetime import datetime
+from flask import Flask, render_template, send_from_directory, request, jsonify
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import pyautogui
@@ -29,6 +26,13 @@ os.makedirs(OLD_VIDEO_FOLDER, exist_ok=True)
 # Global variables
 obs_client = None
 current_video = None
+system_status = "ready"
+workflow_step = "Ready for next session"
+progress = 0
+is_workflow_running = False
+
+# Status tracking
+status_lock = threading.Lock()
 
 class VideoHandler(FileSystemEventHandler):
     def on_created(self, event):
@@ -72,6 +76,49 @@ def execute_macro(key):
     except Exception as e:
         print(f"Failed to press {key}: {e}")
 
+def update_status(status, step, progress_val):
+    global system_status, workflow_step, progress
+    with status_lock:
+        system_status = status
+        workflow_step = step
+        progress = progress_val
+
+def automated_workflow():
+    global is_workflow_running
+    if is_workflow_running:
+        return {"success": False, "message": "Workflow already running"}
+
+    is_workflow_running = True
+    update_status("running", "Starting workflow...", 0)
+
+    try:
+        # Step 1: Press F6 scene
+        update_status("running", "Switching to F6 scene", 10)
+        execute_macro('f6')
+        time.sleep(3)  # Wait 3 seconds
+
+        # Step 2: Press F7 scene and start recording
+        update_status("running", "Switching to F7 scene and starting recording", 30)
+        execute_macro('f7')
+        start_recording()
+        time.sleep(10)  # Wait 10 seconds
+
+        # Step 3: Stop recording and press F8 scene
+        update_status("running", "Stopping recording and switching to F8 scene", 80)
+        stop_recording()
+        execute_macro('f8')
+
+        # Step 4: Ready for next user
+        update_status("ready", "Ready for next session", 100)
+        is_workflow_running = False
+
+        return {"success": True, "message": "Workflow completed successfully"}
+
+    except Exception as e:
+        update_status("error", f"Error: {str(e)}", 0)
+        is_workflow_running = False
+        return {"success": False, "message": str(e)}
+
 # Flask apps
 main_app = Flask(__name__)
 config_app = Flask(__name__)
@@ -82,23 +129,25 @@ tablet_app = Flask(__name__)
 # Main app routes
 @main_app.route('/')
 def main_page():
-    return render_template_string('''
-    <!DOCTYPE html>
-    <html>
-    <head><title>Walter Camera - Main</title></head>
-    <body>
-        <h1>Walter Camera Control</h1>
-        <button onclick="startSystem()">Start System</button>
-        <script>
-            function startSystem() {
-                fetch('/start', {method: 'POST'})
-                .then(response => response.json())
-                .then(data => alert(data.message));
-            }
-        </script>
-    </body>
-    </html>
-    ''')
+    with status_lock:
+        return render_template('index.html',
+                             status=system_status,
+                             progress=progress,
+                             workflow_step=workflow_step)
+
+@main_app.route('/start_workflow', methods=['POST'])
+def start_workflow():
+    result = automated_workflow()
+    return jsonify(result)
+
+@main_app.route('/get_status')
+def get_status():
+    with status_lock:
+        return jsonify({
+            "status": system_status,
+            "progress": progress,
+            "workflow_step": workflow_step
+        })
 
 @main_app.route('/start', methods=['POST'])
 def start_system():
@@ -106,10 +155,10 @@ def start_system():
     observer = Observer()
     observer.schedule(VideoHandler(), VIDEO_FOLDER, recursive=False)
     observer.start()
-    
+
     # Start OBS connection
     start_obs_connection()
-    
+
     return jsonify({"message": "System started successfully"})
 
 # Config app routes
@@ -185,62 +234,54 @@ def execute_macro_route(key):
 @download_app.route('/')
 def download_page():
     global current_video
-    if current_video:
-        filename = os.path.basename(current_video)
-        return render_template_string(f'''
-        <!DOCTYPE html>
-        <html>
-        <head><title>Download Video</title></head>
-        <body>
-            <h1>Download Current Video</h1>
-            <p>Current video: {filename}</p>
-            <a href="/download/{filename}" download>Download Video</a>
-        </body>
-        </html>
-        ''')
-    else:
-        return "<h1>No video available</h1>"
+
+    def get_video_info(filepath):
+        if not filepath or not os.path.exists(filepath):
+            return None
+        stat = os.stat(filepath)
+        return {
+            'filename': os.path.basename(filepath),
+            'size_mb': round(stat.st_size / (1024 * 1024), 2),
+            'date': datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+    current_video_info = get_video_info(current_video) if current_video else None
+
+    old_videos = []
+    if os.path.exists(OLD_VIDEO_FOLDER):
+        for file in os.listdir(OLD_VIDEO_FOLDER):
+            if file.endswith(('.mp4', '.avi', '.mkv')):
+                filepath = os.path.join(OLD_VIDEO_FOLDER, file)
+                info = get_video_info(filepath)
+                if info:
+                    old_videos.append(info)
+
+    return render_template('download.html',
+                         current_video=current_video_info,
+                         old_videos=old_videos)
 
 @download_app.route('/download/<filename>')
 def download_file(filename):
     return send_from_directory(VIDEO_FOLDER, filename, as_attachment=True)
 
+@download_app.route('/download/old/<filename>')
+def download_old_file(filename):
+    return send_from_directory(OLD_VIDEO_FOLDER, filename, as_attachment=True)
+
 # Tablet app routes
 @tablet_app.route('/')
 def tablet_page():
-    return render_template_string('''
-    <!DOCTYPE html>
-    <html>
-    <head><title>Tablet Control</title></head>
-    <body>
-        <h1>Recording Control</h1>
-        <button onclick="startRecording()">Start Recording</button>
-        <button onclick="stopRecording()">Stop Recording</button>
-        <script>
-            function startRecording() {
-                fetch('/start_recording', {method: 'POST'})
-                .then(response => response.json())
-                .then(data => alert(data.message));
-            }
-            function stopRecording() {
-                fetch('/stop_recording', {method: 'POST'})
-                .then(response => response.json())
-                .then(data => alert(data.message));
-            }
-        </script>
-    </body>
-    </html>
-    ''')
+    return render_template('tablet.html')
 
 @tablet_app.route('/start_recording', methods=['POST'])
 def start_recording_route():
     start_recording()
-    return jsonify({"message": "Recording started"})
+    return jsonify({"success": True, "message": "Recording started"})
 
 @tablet_app.route('/stop_recording', methods=['POST'])
 def stop_recording_route():
     stop_recording()
-    return jsonify({"message": "Recording stopped"})
+    return jsonify({"success": True, "message": "Recording stopped"})
 
 def run_server(app, port):
     app.run(host='0.0.0.0', port=port, debug=False)

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Videos - Walter Camera</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+        }
+        .container { max-width: 800px; margin-top: 50px; }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        .video-card {
+            transition: transform 0.3s ease;
+        }
+        .video-card:hover {
+            transform: translateY(-5px);
+        }
+        .btn-download {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            border: none;
+            border-radius: 25px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card p-4">
+            <div class="text-center mb-4">
+                <h1 class="display-5 text-primary">📥 Download Videos</h1>
+                <p class="text-muted">Access your recorded videos</p>
+            </div>
+
+            {% if current_video %}
+            <div class="video-card card mb-4 p-3">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-1">Latest Video</h5>
+                        <p class="text-muted mb-0">{{ current_video.filename }}</p>
+                        <small class="text-muted">{{ current_video.size_mb }} MB • {{ current_video.date }}</small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="/download/{{ current_video.filename }}" class="btn btn-download">
+                            <i class="fas fa-download me-2"></i>Download
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle me-2"></i>No videos available yet. Start a recording session first.
+            </div>
+            {% endif %}
+
+            {% if old_videos %}
+            <h4 class="mt-4 mb-3">Previous Videos</h4>
+            {% for video in old_videos %}
+            <div class="video-card card mb-3 p-3">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6 class="mb-1">{{ video.filename }}</h6>
+                        <small class="text-muted">{{ video.size_mb }} MB • {{ video.date }}</small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="/download/old/{{ video.filename }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-download me-2"></i>Download
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <div class="text-center mt-4">
+                <a href="http://localhost:5000" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Control Center
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+</body>
+</html>
