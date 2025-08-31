@@ -3,11 +3,10 @@ import threading
 import time
 import json
 from datetime import datetime
-from flask import Flask, render_template, send_from_directory, request, jsonify
+from flask import Flask, render_template, render_template_string, send_from_directory, request, jsonify
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import pyautogui
-import obswebsocket, obswebsocket.requests
 from obswebsocket import obsws, requests
 
 # Configuration
