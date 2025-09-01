@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Tablet - Petrobras</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <img src="../assets/petrobras-logo.png" alt="Logo Petrobras" class="logo">
+            <h1 class="title">Sistema de Fotografia</h1>
+            <p class="subtitle">Petrobras - Controle de Gravação</p>
+        </header>
+        
+        <main class="main-content">
+            <div class="status-card">
+                <div class="status-indicator" id="status-indicator">
+                    <div class="status-dot"></div>
+                    <span class="status-text" id="status-message">Pronto para iniciar</span>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <button id="start-button" class="start-button">
+                    <div class="button-content">
+                        <div class="button-icon">📸</div>
+                        <div class="button-text">INICIAR GRAVAÇÃO</div>
+                    </div>
+                </button>
+                
+                <div class="instructions">
+                    <p>Pressione o botão para iniciar o processo de gravação automática</p>
+                    <p class="small-text">O sistema irá preparar a câmera e gravar automaticamente</p>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <p>© 2024 Petrobras - Sistema de Controle de Fotografia</p>
+        </footer>
+    </div>
+    <script src="tablet.js"></script>
+</body>
+</html>

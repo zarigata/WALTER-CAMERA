@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download de Vídeos - Petrobras</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="download-container">
+        <header class="download-header">
+            <div class="header-content">
+                <img src="../assets/petrobras-logo.png" alt="Logo Petrobras" class="download-logo">
+                <div class="header-text">
+                    <h1 class="download-title">Download de Vídeos</h1>
+                    <p class="download-subtitle">Sistema de Fotografia - Petrobras</p>
+                </div>
+            </div>
+        </header>
+
+        <main class="download-main">
+            <!-- Latest Video Section -->
+            <div class="video-section">
+                <div class="section-header">
+                    <i class="fas fa-video"></i>
+                    <h2>Vídeo Mais Recente</h2>
+                </div>
+                
+                <div class="video-card" id="latest-video-card">
+                    <div class="video-placeholder" id="video-placeholder">
+                        <i class="fas fa-video"></i>
+                        <p>Carregando vídeo...</p>
+                    </div>
+                    
+                    <div class="video-info" id="video-info" style="display: none;">
+                        <div class="video-details">
+                            <h3 id="video-title">Vídeo Disponível</h3>
+                            <p id="video-date">Data: Carregando...</p>
+                            <p id="video-size">Tamanho: Carregando...</p>
+                        </div>
+                        
+                        <div class="video-actions">
+                            <button id="play-video" class="action-button primary">
+                                <i class="fas fa-play"></i>
+                                Reproduzir
+                            </button>
+                            <a id="download-latest" class="action-button secondary" href="#" download>
+                                <i class="fas fa-download"></i>
+                                Baixar Vídeo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="no-video-message" id="no-video-message" style="display: none;">
+                    <i class="fas fa-info-circle"></i>
+                    <h3>Nenhum vídeo disponível</h3>
+                    <p>Realize uma gravação primeiro para ter um vídeo disponível para download.</p>
+                </div>
+            </div>
+
+            <!-- Archived Videos Section -->
+            <div class="archived-section">
+                <div class="section-header">
+                    <i class="fas fa-archive"></i>
+                    <h2>Vídeos Arquivados</h2>
+                </div>
+                
+                <div class="archived-grid" id="archived-grid">
+                    <!-- Archived videos will be inserted here -->
+                </div>
+                
+                <div class="no-archived-message" id="no-archived-message" style="display: none;">
+                    <i class="fas fa-folder-open"></i>
+                    <p>Nenhum vídeo arquivado encontrado.</p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="download-footer">
+            <p>© 2024 Petrobras - Sistema de Controle de Fotografia | Página de Download</p>
+        </footer>
+    </div>
+
+    <!-- Video Modal -->
+    <div id="video-modal" class="video-modal">
+        <div class="modal-content video-modal-content">
+            <div class="modal-header">
+                <h3>Reproduzir Vídeo</h3>
+                <span class="modal-close" id="video-modal-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <video id="video-player" controls>
+                    Seu navegador não suporta a reprodução de vídeo.
+                </video>
+            </div>
+        </div>
+    </div>
+
+    <script src="download.js"></script>
+</body>
+</html>
