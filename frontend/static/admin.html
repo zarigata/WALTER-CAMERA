@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        body {
+            background-color: #333333;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        form {
+            background-color: #FFFFFF;
+            color: #333333;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        input {
+            margin: 10px 0;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #00693F;
+            color: #FFD100;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Admin Panel</h1>
+    <form id="settingsForm">
+        <label for="obs_host">OBS Host:</label>
+        <input type="text" id="obs_host" name="obs_host">
+        <label for="obs_port">OBS Port:</label>
+        <input type="number" id="obs_port" name="obs_port">
+        <label for="recording_duration">Recording Duration (s):</label>
+        <input type="number" id="recording_duration" name="recording_duration">
+        <label for="delay">Delay Before Recording (s):</label>
+        <input type="number" id="delay" name="delay">
+        <button type="submit">Update Settings</button>
+    </form>
+    <script>
+        // Load current settings
+        fetch('/admin/settings')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('obs_host').value = data.obs_host;
+                document.getElementById('obs_port').value = data.obs_port;
+                document.getElementById('recording_duration').value = data.recording_duration;
+                document.getElementById('delay').value = data.delay;
+            });
+        // Update settings
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            const response = await fetch('/admin/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            alert(result.status);
+        });
+    </script>
+</body>
+</html>

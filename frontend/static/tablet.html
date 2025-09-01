@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Booth Control</title>
+    <style>
+        body {
+            background-color: #333333;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        button {
+            background-color: #00693F;
+            color: #FFD100;
+            border: none;
+            padding: 20px 40px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #FFD100;
+            color: #00693F;
+        }
+    </style>
+</head>
+<body>
+    <h1>Camera Booth Control</h1>
+    <button id="startBtn">Start Recording</button>
+    <script>
+        document.getElementById('startBtn').addEventListener('click', async () => {
+            const response = await fetch('/start_recording', { method: 'POST' });
+            const data = await response.json();
+            alert(data.status);
+        });
+    </script>
+</body>
+</html>

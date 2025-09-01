@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  camera-booth:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/videos:/app/videos
+    network_mode: host
