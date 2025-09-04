@@ -5,6 +5,7 @@ import time
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.obs_controller import obs_controller
@@ -27,6 +28,15 @@ async def lifespan(app: FastAPI):
     obs_controller.disconnect()
 
 app = FastAPI(lifespan=lifespan)
+
+# Add CORS middleware to allow frontend to communicate with backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for development
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 # --- Recording Workflow ---
 async def recording_flow():
