@@ -42,7 +42,6 @@ class FileManager:
 
     def move_newest_to_latest(self):
         """Moves the newest recording to the 'latest' folder."""
-        self.move_old_videos()
         newest_video = self.get_newest_recording()
         if newest_video:
             try:

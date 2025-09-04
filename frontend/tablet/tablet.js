@@ -24,6 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStatus('standby', messages.standby);
 
         try {
+            // First, move the old video to the 'old' folder
+            await fetch('/api/videos/move-to-old', {
+                method: 'POST',
+            });
+
             const response = await fetch('/api/recording/start', {
                 method: 'POST',
                 headers: {

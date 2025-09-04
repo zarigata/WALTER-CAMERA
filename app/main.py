@@ -79,6 +79,16 @@ async def get_latest_video():
         return FileResponse(latest_video_path, media_type='video/mp4', filename=os.path.basename(latest_video_path))
     raise HTTPException(status_code=404, detail="No latest video found.")
 
+@app.post("/api/videos/move-to-old")
+async def move_latest_to_old():
+    """Endpoint to move the latest video to the old folder."""
+    try:
+        file_manager.move_old_videos()
+        return JSONResponse(content={"message": "Video moved to old folder."}, status_code=200)
+    except Exception as e:
+        logging.error(f"Error moving video to old folder: {e}")
+        raise HTTPException(status_code=500, detail="Failed to move video.")
+
 @app.get("/api/videos/old")
 async def get_old_videos():
     """Endpoint to get a list of old video filenames."""
