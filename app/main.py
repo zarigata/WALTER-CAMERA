@@ -76,7 +76,16 @@ async def get_latest_video():
     """Endpoint to get the latest video file."""
     latest_video_path = file_manager.get_latest_video_path()
     if latest_video_path and os.path.exists(latest_video_path):
-        return FileResponse(latest_video_path, media_type='video/mp4', filename=os.path.basename(latest_video_path))
+        filename = os.path.basename(latest_video_path)
+        return FileResponse(
+            path=latest_video_path,
+            filename=filename,
+            media_type='video/mp4',
+            headers={
+                'Accept-Ranges': 'bytes',
+                'Content-Disposition': f'attachment; filename="{filename}"'
+            }
+        )
     raise HTTPException(status_code=404, detail="No latest video found.")
 
 @app.post("/api/videos/move-to-old")
@@ -110,16 +119,24 @@ async def update_settings(new_settings: Settings):
     return {"message": "Settings updated successfully", "settings": settings.dict()}
 
 # --- Static Files Mounting ---
+# The order of mounting is important. Most specific routes should come first.
+
 # Serve static video files
-app.mount("/videos", StaticFiles(directory=settings.video_base_path), name="videos")
+app.mount("/videos/latest", StaticFiles(directory=settings.latest_video_folder), name="videos_latest")
+app.mount("/videos/old", StaticFiles(directory=settings.old_videos_folder), name="videos_old")
+
+# Serve frontend assets
+app.mount("/assets", StaticFiles(directory="frontend/assets"), name="assets")
 
 # Serve frontend pages
 app.mount("/admin", StaticFiles(directory="frontend/admin", html=True), name="admin")
 app.mount("/tablet", StaticFiles(directory="frontend/tablet", html=True), name="tablet")
 app.mount("/download", StaticFiles(directory="frontend/download", html=True), name="download")
 
-# Serve main index and assets
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+# Serve the main index page at the root
+@app.get("/", response_class=FileResponse)
+async def read_index():
+    return "frontend/index.html"
 
 if __name__ == "__main__":
     import uvicorn
