@@ -40,49 +40,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Buscar vídeo mais recente
     async function fetchLatestVideo() {
         try {
             const response = await fetch('/api/videos/latest');
+
             if (response.ok) {
-                // Get the video URL directly from the response
                 const videoUrl = response.url;
                 currentVideoUrl = videoUrl;
-                
-                // Get the filename from the content-disposition header or use a default
+
                 let videoName = 'video-recording.mp4';
                 const contentDisposition = response.headers.get('content-disposition');
                 if (contentDisposition) {
                     const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-                    if (filenameMatch && filenameMatch[1]) { 
+                    if (filenameMatch && filenameMatch[1]) {
                         videoName = filenameMatch[1].replace(/['"]/g, '');
                     }
                 }
                 currentVideoName = videoName;
-                
-                // Get file info from headers
+
                 const lastModified = response.headers.get('last-modified');
                 const contentLength = response.headers.get('content-length');
-                
                 const formattedDate = lastModified ? formatDate(lastModified) : 'Data não disponível';
                 const formattedSize = contentLength ? formatFileSize(parseInt(contentLength, 10)) : 'Tamanho não disponível';
-                
-                // Update UI
+
                 videoPlaceholder.style.display = 'none';
                 noVideoMessage.style.display = 'none';
                 videoInfo.style.display = 'flex';
-                
                 videoTitle.textContent = 'Vídeo Disponível';
                 videoDate.textContent = `Data: ${formattedDate}`;
                 videoSize.textContent = `Tamanho: ${formattedSize}`;
-                
-                // Set up download button
+
                 downloadLatest.href = videoUrl;
                 downloadLatest.download = videoName;
-                    
-                } else {
-                    showNoVideo();
-                }
             } else {
                 showNoVideo();
             }

@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     video_base_path: str = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'videos'))
     latest_video_folder: str = os.path.join(video_base_path, 'latest')
     old_videos_folder: str = os.path.join(video_base_path, 'old')
+    cloud_folder: str = os.path.abspath(os.path.join(video_base_path, '..', 'Cloud'))
 
     recording_path: str = os.getenv("RECORDING_PATH", "")
 
@@ -32,3 +33,4 @@ settings = Settings()
 # Ensure video directories exist
 os.makedirs(settings.latest_video_folder, exist_ok=True)
 os.makedirs(settings.old_videos_folder, exist_ok=True)
+os.makedirs(settings.cloud_folder, exist_ok=True)

@@ -8,6 +8,7 @@ class FileManager:
     def __init__(self):
         self.latest_folder = settings.latest_video_folder
         self.old_folder = settings.old_videos_folder
+        self.cloud_folder = settings.cloud_folder
         # This path needs to be configured in OBS settings
         self.recording_path = settings.recording_path 
 
@@ -16,10 +17,15 @@ class FileManager:
         files = glob.glob(os.path.join(self.latest_folder, '*'))
         for f in files:
             try:
+                # Copy to cloud folder first
+                shutil.copy(f, self.cloud_folder)
+                logging.info(f"Copied video {f} to {self.cloud_folder}")
+                
+                # Then move to old folder
                 shutil.move(f, self.old_folder)
                 logging.info(f"Moved old video {f} to {self.old_folder}")
             except Exception as e:
-                logging.error(f"Error moving file {f}: {e}")
+                logging.error(f"Error processing file {f}: {e}")
 
     def get_newest_recording(self) -> str | None:
         """Finds the most recent video file in the OBS recording path."""
